@@ -13,7 +13,7 @@ typedef std::vector<string_t> patterns_t;
 void templa_version(void)
 {
     printf(
-        "katahiromz/templa version 0.0\n"
+        "katahiromz/templa version 0.1\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT\n");
 }
@@ -93,18 +93,13 @@ inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
     str_replace(data, string_t(from), string_t(to));
 }
 
-bool wildcard_match(const string_t& str, const string_t& pattern, size_t strlen, size_t patlen)
+bool wildcard_match(const string_t& str, const string_t& pattern)
 {
     string_t pat = L"^" + pattern + L"$";
     str_replace(pat, L"?", L".");
     str_replace(pat, L"*", L".*");
     std::wregex regex(pat);
     return std::regex_match(str, regex);
-}
-
-bool wildcard_match(const string_t& str, const string_t& pattern)
-{
-    return wildcard_match(str, pattern, str.size(), pattern.size());
 }
 
 bool load_file(const string_t& filename, binary_t& data)
@@ -502,11 +497,13 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const pat
                 break;
             }
         }
-
-        if (templa_file(file1, file2, mapping, exclude) != 0)
+        else
         {
-            ret = 1;
-            break;
+            if (templa_file(file1, file2, mapping, exclude) != 0)
+            {
+                ret = 1;
+                break;
+            }
         }
     } while (FindNextFileW(hFind, &find));
 
