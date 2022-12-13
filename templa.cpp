@@ -21,7 +21,10 @@ void templa_help(void)
     printf(
         "templa -- Copy files with replacing filenames and contents\n"
         "\n"
-        "Usage: templa [OPTIONS] \"file1\" \"file2\"\n"
+        "Usage: templa [OPTIONS] source1 ... destination\n"
+        "\n"
+        "  source1 ...   Specify file(s) and/or folder(s).\n"
+        "  destination   Specify the destination path.\n"
         "\n"
         "Options:\n"
         "  --replace FROM TO    Replace strings in filename and file contents.\n"
@@ -427,7 +430,7 @@ int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, cons
 
     if (!load_file_with_encoding(file1, string, encoding))
     {
-        fprintf(stderr, "ERROR: Cannot read file '%s'\n", file1.c_str());
+        fprintf(stderr, "ERROR: Cannot read file '%ls'\n", file1.c_str());
         return 1;
     }
 
@@ -455,7 +458,7 @@ int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, cons
 
     if (!save_file_with_encoding(file2, string, encoding))
     {
-        fprintf(stderr, "ERROR: Cannot write file '%s'\n", file2.c_str());
+        fprintf(stderr, "ERROR: Cannot write file '%ls'\n", file2.c_str());
         return 1;
     }
 
@@ -516,7 +519,7 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const pat
         {
             if (!CreateDirectoryW(file2.c_str(), NULL))
             {
-                fprintf(stderr, "ERROR: Cannot create folder '%s'\n", file2.c_str());
+                fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
                 ret = 1;
                 break;
             }
@@ -540,14 +543,15 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const pat
     return ret;
 }
 
-int templa(string_t file1, string_t file2, const mapping_t& mapping, const patterns_t& exclude)
+int templa(string_t file1, string_t destination, const mapping_t& mapping, const patterns_t& exclude)
 {
     backslash_to_slash(file1);
-    backslash_to_slash(file2);
+    backslash_to_slash(destination);
+    add_backslash(destination);
 
     if (!PathFileExistsW(file1.c_str()))
     {
-        fprintf(stderr, "ERROR: File '%s' not found\n", file1.c_str());
+        fprintf(stderr, "ERROR: File '%ls' not found\n", file1.c_str());
         return 1;
     }
 
@@ -560,21 +564,19 @@ int templa(string_t file1, string_t file2, const mapping_t& mapping, const patte
             return 0;
     }
 
-    auto dirname2 = dirname(file2);
-    auto basename2 = basename(file2);
-
+    auto dirname2 = destination;
+    auto basename2 = basename1;
     for (auto& pair : mapping)
     {
         str_replace(basename2, pair.first, pair.second);
     }
-
-    file2 = dirname2 + basename2;
+    auto file2 = dirname2 + basename2;
 
     if (PathIsDirectoryW(file1.c_str()))
     {
         if (!CreateDirectoryW(file2.c_str(), NULL))
         {
-            fprintf(stderr, "ERROR: Cannot create folder '%s'\n", file2.c_str());
+            fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
             return 1;
         }
         return templa_dir(file1, file2, mapping, exclude);
@@ -593,7 +595,7 @@ int __cdecl wmain(int argc, wchar_t **argv)
     }
 
     mapping_t mapping;
-    string_t file1, file2;
+    std::vector<string_t> files;
     patterns_t exclude;
 
     str_split(exclude, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
@@ -651,34 +653,25 @@ int __cdecl wmain(int argc, wchar_t **argv)
             return 1;
         }
 
-        if (file1.empty())
-        {
-            file1 = arg;
-        }
-        else if (file2.empty())
-        {
-            file2 = arg;
-        }
-        else
-        {
-            fprintf(stderr, "ERROR: Too many files\n");
-            return 1;
-        }
+        files.push_back(arg);
     }
 
-    if (file1.empty())
+    if (files.size() <= 1)
     {
-        fprintf(stderr, "ERROR: Specify two files\n");
+        fprintf(stderr, "ERROR: Specify two or more files\n");
         return 1;
     }
 
-    if (file2.empty())
+    size_t iLast = files.size() - 1;
+    auto destination = files[iLast];
+    for (size_t i = 0; i < iLast; ++i)
     {
-        fprintf(stderr, "ERROR: Specify one more file\n");
-        return 1;
+        int ret = templa(files[i], destination, mapping, exclude);
+        if (ret != 0)
+            return ret;
     }
 
-    return templa(file1, file2, mapping, exclude);
+    return 0;
 }
 
 #if defined(__MINGW32__) || defined(__clang__)
