@@ -24,7 +24,7 @@ void templa_help(void)
         "Usage: templa [OPTIONS] source1 ... destination\n"
         "\n"
         "  source1 ...   Specify file(s) and/or folder(s).\n"
-        "  destination   Specify the destination path.\n"
+        "  destination   Specify the destination directory.\n"
         "\n"
         "Options:\n"
         "  --replace FROM TO    Replace strings in filename and file contents.\n"
@@ -552,6 +552,12 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
     if (!PathFileExistsW(file1.c_str()))
     {
         fprintf(stderr, "ERROR: File '%ls' not found\n", file1.c_str());
+        return 1;
+    }
+
+    if (!PathIsDirectoryW(file1.c_str()))
+    {
+        fprintf(stderr, "ERROR: '%ls' is not a directory\n", destination.c_str());
         return 1;
     }
 
