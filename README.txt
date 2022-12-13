@@ -1,6 +1,9 @@
 templa -- Copy files with replacing filenames and contents
 
-Usage: templa [OPTIONS] "file1" "file2"
+Usage: templa [OPTIONS] source1 ... destination
+
+  source1 ...   Specify file(s) and/or folder(s).
+  destination   Specify the destination directory.
 
 Options:
   --replace FROM TO    Replace strings in filename and file contents.
