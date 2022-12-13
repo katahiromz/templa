@@ -8,6 +8,31 @@
 #include <cstdint>
 #include <unordered_map>
 
+void templa_version(void)
+{
+    printf(
+        "katahiromz/templa version 0.2\n"
+        "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
+        "License: MIT\n");
+}
+
+void templa_help(void)
+{
+    printf(
+        "templa -- Copy files with replacing filenames and contents\n"
+        "\n"
+        "Usage: templa [OPTIONS] \"file1\" \"file2\"\n"
+        "\n"
+        "Options:\n"
+        "  --replace FROM TO    Replace strings in filename and file contents.\n"
+        "  --exclude \"PATTERN\"  Exclude the wildcard patterns separated by semicolon.\n"
+        "                       (default: \"q;*.bin;.git;.svg;.vs\")\n"
+        "  --help               Show this message.\n"
+        "  --version            Show version information.\n"
+        "\n"
+        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n");
+}
+
 typedef std::wstring string_t;
 typedef std::string binary_t;
 typedef std::unordered_map<string_t, string_t> mapping_t;
@@ -38,31 +63,6 @@ struct ENCODING
 };
 
 typedef std::vector<string_t> patterns_t;
-
-void templa_version(void)
-{
-    printf(
-        "katahiromz/templa version 0.1\n"
-        "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
-        "License: MIT\n");
-}
-
-void templa_help(void)
-{
-    printf(
-        "templa -- Copy files with replacing filenames and contents\n"
-        "\n"
-        "Usage: templa [OPTIONS] \"file1\" \"file2\"\n"
-        "\n"
-        "Options:\n"
-        "  --replace FROM TO    Replace strings in filename and file contents.\n"
-        "  --exclude \"PATTERN\"  Exclude the wildcard patterns separated by semicolon.\n"
-        "                       (default: \"q;*.bin;.git;.svg;.vs\")\n"
-        "  --help               Show this message.\n"
-        "  --version            Show version information.\n"
-        "\n"
-        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n");
-}
 
 string_t dirname(const string_t& pathname)
 {
@@ -643,6 +643,12 @@ int __cdecl wmain(int argc, wchar_t **argv)
                 fprintf(stderr, "ERROR: Option '--exclude' requires one argument\n");
                 return 1;
             }
+        }
+
+        if (arg[0] == L'-')
+        {
+            fprintf(stderr, "ERROR: '%ls' is invalid option\n", arg.c_str());
+            return 1;
         }
 
         if (file1.empty())
