@@ -6,11 +6,10 @@
 #include <vector>
 #include <regex>
 #include <cstdint>
+#include <unordered_map>
 
 typedef std::wstring string_t;
 typedef std::string binary_t;
-
-#include <unordered_map>
 typedef std::unordered_map<string_t, string_t> mapping_t;
 
 enum ENCODING_TYPE
