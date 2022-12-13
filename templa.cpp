@@ -669,7 +669,7 @@ int __cdecl wmain(int argc, wchar_t **argv)
     }
 
     size_t iLast = files.size() - 1;
-    auto destination = files[iLast];
+    auto& destination = files[iLast];
     for (size_t i = 0; i < iLast; ++i)
     {
         int ret = templa(files[i], destination, mapping, exclude);
