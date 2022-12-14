@@ -136,6 +136,9 @@ bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size
             continue;
         }
 
+        if (istr == str.size())
+            return false;
+
         wchar_t ch1 = pat[ipat], ch2 = str[istr];
         ch1 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch1));
         ch2 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch2));
