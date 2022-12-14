@@ -129,10 +129,11 @@ bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size
             if (templa_wildcard(str, pat, istr, ipat + 1))
                 return true;
 
-            if (istr < str.size() && templa_wildcard(str, pat, istr + 1, ipat))
-                return true;
+            if (istr == str.size())
+                return false;
 
-            return false;
+            ++istr;
+            continue;
         }
 
         wchar_t ch1 = pat[ipat], ch2 = str[istr];
