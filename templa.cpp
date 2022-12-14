@@ -274,7 +274,8 @@ static bool detect_encoding(string_t& string, binary_t& binary, TEMPLA_ENCODING&
         {
             encoding.type = TET_BINARY;
             string = binary_to_string(CP_ACP, binary);
-            return detect_newline(string, encoding);
+            encoding.newline = TNL_UNKNOWN;
+            return true;
         }
         else if (bUTF16LE)
         {
