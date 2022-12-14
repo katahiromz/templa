@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.6\n"
+        "katahiromz/templa version 0.7\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -324,13 +324,12 @@ static bool detect_encoding(string_t& string, binary_t& binary, TEMPLA_ENCODING&
     }
 
     encoding.type = TET_BINARY;
-    string = binary_to_string(CP_ACP, binary);
+    string = std::move(utf8);
     return detect_newline(string, encoding);
 }
 
-bool templa_load_file_ex(const string_t& filename, string_t& string, TEMPLA_ENCODING& encoding)
+bool templa_load_file_ex(const string_t& filename, binary_t& binary, string_t& string, TEMPLA_ENCODING& encoding)
 {
-    binary_t binary;
     if (!templa_load_file(filename, binary))
         return false;
 
@@ -338,31 +337,35 @@ bool templa_load_file_ex(const string_t& filename, string_t& string, TEMPLA_ENCO
     return true;
 }
 
-bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPLA_ENCODING& encoding)
+bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& string, const TEMPLA_ENCODING& encoding)
 {
-    switch (encoding.newline)
+    if (encoding.type != TET_BINARY)
     {
-    case TNL_CRLF:
-    case TNL_UNKNOWN:
-        str_replace(string, L"\r\n", L"\n");
-        str_replace(string, L"\n", L"\r\n");
-        break;
+        switch (encoding.newline)
+        {
+        case TNL_CRLF:
+        case TNL_UNKNOWN:
+            str_replace(string, L"\r\n", L"\n");
+            str_replace(string, L"\n", L"\r\n");
+            break;
 
-    case TNL_LF:
-        str_replace(string, L"\r\n", L"\n");
-        str_replace(string, L"\r", L"\n");
-        break;
+        case TNL_LF:
+            str_replace(string, L"\r\n", L"\n");
+            str_replace(string, L"\r", L"\n");
+            break;
 
-    case TNL_CR:
-        str_replace(string, L"\r\n", L"\r");
-        str_replace(string, L"\n", L"\r");
-        break;
+        case TNL_CR:
+            str_replace(string, L"\r\n", L"\r");
+            str_replace(string, L"\n", L"\r");
+            break;
+        }
     }
 
-    binary_t binary;
     switch (encoding.type)
     {
     case TET_BINARY:
+        break;
+
     case TET_UTF8:
         binary = std::move(string_to_binary(CP_UTF8, string));
         break;
@@ -382,7 +385,7 @@ bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPL
         break;
     }
 
-    if (encoding.bom)
+    if (encoding.type != TET_BINARY && encoding.bom)
     {
         switch (encoding.type)
         {
@@ -423,7 +426,8 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
             return TEMPLA_RET_OK;
     }
 
-    if (!templa_load_file_ex(file1, string, encoding))
+    binary_t binary;
+    if (!templa_load_file_ex(file1, binary, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot read file '%ls'\n", file1.c_str());
         return TEMPLA_RET_READERROR;
@@ -454,7 +458,7 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
         printf("%ls --> %ls [%s]\n", file1.c_str(), file2.c_str(), type);
     }
 
-    if (!templa_save_file_ex(file2, string, encoding))
+    if (!templa_save_file_ex(file2, binary, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot write file '%ls'\n", file2.c_str());
         return TEMPLA_RET_WRITEERROR;

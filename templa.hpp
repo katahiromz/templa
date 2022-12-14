@@ -59,5 +59,5 @@ struct TEMPLA_ENCODING
     bool bom = false;
 };
 
-bool templa_load_file_ex(const string_t& filename, string_t& string, TEMPLA_ENCODING& encoding);
-bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPLA_ENCODING& encoding);
+bool templa_load_file_ex(const string_t& filename, binary_t& binary, string_t& string, TEMPLA_ENCODING& encoding);
+bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& string, const TEMPLA_ENCODING& encoding);
