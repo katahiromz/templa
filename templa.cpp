@@ -325,7 +325,8 @@ static bool detect_encoding(string_t& string, binary_t& binary, TEMPLA_ENCODING&
 
     encoding.type = TET_BINARY;
     string = std::move(utf8);
-    return detect_newline(string, encoding);
+    encoding.newline = TNL_UNKNOWN;
+    return true;
 }
 
 bool templa_load_file_ex(const string_t& filename, binary_t& binary, string_t& string, TEMPLA_ENCODING& encoding)
@@ -385,7 +386,7 @@ bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& s
         break;
     }
 
-    if (encoding.type != TET_BINARY && encoding.bom)
+    if (encoding.bom)
     {
         switch (encoding.type)
         {
@@ -413,9 +414,6 @@ static TEMPLA_RET
 templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
             const string_list_t& exclude, templa_canceler_t canceler)
 {
-    string_t string;
-    TEMPLA_ENCODING encoding;
-
     if (canceler && canceler())
         return TEMPLA_RET_CANCELED;
 
@@ -427,6 +425,8 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
     }
 
     binary_t binary;
+    string_t string;
+    TEMPLA_ENCODING encoding;
     if (!templa_load_file_ex(file1, binary, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot read file '%ls'\n", file1.c_str());
