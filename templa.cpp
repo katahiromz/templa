@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.1\n"
+        "katahiromz/templa version 0.8.2\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -29,7 +29,7 @@ const char *templa_get_usage(void)
         "\n"
         "Options:\n"
         "  --replace FROM TO    Replace strings in filename and file contents.\n"
-        "  --exclude \"PATTERN\"  Exclude the wildcard patterns separated by semicolon.\n"
+        "  --ignore \"PATTERN\"   Exclude the wildcard patterns separated by semicolon.\n"
         "                       (default: \"q;*.bin;.git;.svg;.vs\")\n"
         "  --help               Show this message.\n"
         "  --version            Show version information.\n"
@@ -418,16 +418,19 @@ bool TEMPLA_FILE::save(const string_t& filename)
 
 static TEMPLA_RET
 templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
-            const string_list_t& exclude, templa_canceler_t canceler)
+            const string_list_t& ignore, templa_canceler_t canceler)
 {
     if (canceler && canceler())
         return TEMPLA_RET_CANCELED;
 
     auto basename1 = basename(file1);
-    for (auto& exclude_item : exclude)
+    for (auto& ignore_item : ignore)
     {
-        if (wildcard_match(basename1, exclude_item))
+        if (wildcard_match(basename1, ignore_item))
+        {
+            printf("%ls [ignored]\n", file1.c_str());
             return TEMPLA_RET_OK;
+        }
     }
 
     TEMPLA_FILE file;
@@ -488,7 +491,7 @@ static void add_backslash(string_t& string)
 
 static TEMPLA_RET
 templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
-           const string_list_t& exclude, templa_canceler_t canceler)
+           const string_list_t& ignore, templa_canceler_t canceler)
 {
     if (canceler && canceler())
         return TEMPLA_RET_CANCELED;
@@ -543,13 +546,13 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
                 ret = TEMPLA_RET_WRITEERROR;
                 break;
             }
-            ret = templa_dir(file1, file2, mapping, exclude, canceler);
+            ret = templa_dir(file1, file2, mapping, ignore, canceler);
             if (ret != TEMPLA_RET_OK)
                 break;
         }
         else
         {
-            ret = templa_file(file1, file2, mapping, exclude, canceler);
+            ret = templa_file(file1, file2, mapping, ignore, canceler);
             if (ret != TEMPLA_RET_OK)
                 break;
         }
@@ -561,7 +564,7 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 
 TEMPLA_RET
 templa(string_t source, string_t destination, const mapping_t& mapping,
-       const string_list_t& exclude, templa_canceler_t canceler)
+       const string_list_t& ignore, templa_canceler_t canceler)
 {
     if (canceler && canceler())
         return TEMPLA_RET_CANCELED;
@@ -610,10 +613,13 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
     auto dirname1 = dirname(source);
     auto basename1 = basename(source);
 
-    for (auto& exclude_item : exclude)
+    for (auto& ignore_item : ignore)
     {
-        if (wildcard_match(basename1, exclude_item))
+        if (wildcard_match(basename1, ignore_item))
+        {
+            printf("%ls [ignored]\n", source.c_str());
             return TEMPLA_RET_OK;
+        }
     }
 
     auto dirname2 = destination;
@@ -631,10 +637,10 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
             fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
             return TEMPLA_RET_WRITEERROR;
         }
-        return templa_dir(source, file2, mapping, exclude, canceler);
+        return templa_dir(source, file2, mapping, ignore, canceler);
     }
 
-    return templa_file(source, file2, mapping, exclude, canceler);
+    return templa_file(source, file2, mapping, ignore, canceler);
 }
 
 TEMPLA_RET
@@ -648,9 +654,9 @@ templa_main(int argc, wchar_t **argv)
 
     mapping_t mapping;
     std::vector<string_t> files;
-    string_list_t exclude;
+    string_list_t ignore;
 
-    str_split(exclude, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
+    str_split(ignore, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
 
     for (int iarg = 1; iarg < argc; ++iarg)
     {
@@ -684,17 +690,17 @@ templa_main(int argc, wchar_t **argv)
             }
         }
 
-        if (arg == L"--exclude")
+        if (arg == L"--ignore")
         {
             if (iarg + 1 < argc)
             {
-                str_split(exclude, string_t(argv[iarg + 1]), string_t(L";"));
+                str_split(ignore, string_t(argv[iarg + 1]), string_t(L";"));
                 iarg += 1;
                 continue;
             }
             else
             {
-                fprintf(stderr, "ERROR: Option '--exclude' requires one argument\n");
+                fprintf(stderr, "ERROR: Option '--ignore' requires one argument\n");
                 return TEMPLA_RET_SYNTAXERROR;
             }
         }
@@ -718,7 +724,7 @@ templa_main(int argc, wchar_t **argv)
     auto& destination = files[iLast];
     for (size_t i = 0; i < iLast; ++i)
     {
-        TEMPLA_RET ret = templa(files[i], destination, mapping, exclude);
+        TEMPLA_RET ret = templa(files[i], destination, mapping, ignore);
         if (ret != TEMPLA_RET_OK)
             return ret;
     }
