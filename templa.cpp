@@ -576,7 +576,7 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
 
         if (lstrcmpiW(szPath1, szPath2) == 0)
         {
-            fprintf(stderr, "ERROR: Destination is same as source\n");
+            fprintf(stderr, "ERROR: Destination '%ls' is same as source\n", szPath1);
             return TEMPLA_RET_LOGICALERROR;
         }
 
