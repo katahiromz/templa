@@ -34,14 +34,14 @@ inline bool templa_save_file(const string_t& filename, const binary_t& data)
     return templa_save_file(filename, &data[0], data.size());
 }
 
-enum TEMPLA_ENCODING_TYPE
+enum TEMPLA_ENCODING
 {
-    TET_BINARY,
-    TET_UTF8,
-    TET_UTF16,
-    TET_UTF16BE,
-    TET_ANSI,
-    TET_ASCII,
+    TE_BINARY,
+    TE_UTF8,
+    TE_UTF16,
+    TE_UTF16BE,
+    TE_ANSI,
+    TE_ASCII,
 };
 
 enum TEMPLA_NEWLINE
@@ -52,12 +52,16 @@ enum TEMPLA_NEWLINE
     TNL_UNKNOWN,
 };
 
-struct TEMPLA_ENCODING
+struct TEMPLA_FILE
 {
-    TEMPLA_ENCODING_TYPE type = TET_BINARY;
-    TEMPLA_NEWLINE newline = TNL_UNKNOWN;
-    bool bom = false;
-};
+    binary_t m_binary;
+    string_t m_string;
+    TEMPLA_ENCODING m_encoding = TE_BINARY;
+    TEMPLA_NEWLINE m_newline = TNL_UNKNOWN;
+    bool m_bom = false;
 
-bool templa_load_file_ex(const string_t& filename, binary_t& binary, string_t& string, TEMPLA_ENCODING& encoding);
-bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& string, const TEMPLA_ENCODING& encoding);
+    bool load(const string_t& filename);
+    bool save(const string_t& filename);
+    void detect_encoding();
+    void detect_newline();
+};
