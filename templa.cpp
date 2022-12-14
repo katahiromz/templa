@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.5\n"
+        "katahiromz/templa version 0.6\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -347,10 +347,12 @@ bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPL
         str_replace(string, L"\r\n", L"\n");
         str_replace(string, L"\n", L"\r\n");
         break;
+
     case TNL_LF:
         str_replace(string, L"\r\n", L"\n");
         str_replace(string, L"\r", L"\n");
         break;
+
     case TNL_CR:
         str_replace(string, L"\r\n", L"\r");
         str_replace(string, L"\n", L"\r");
@@ -364,13 +366,16 @@ bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPL
     case TET_UTF8:
         binary = std::move(string_to_binary(CP_UTF8, string));
         break;
+
     case TET_UTF16:
         binary.assign(reinterpret_cast<const uint8_t*>(string.data()), reinterpret_cast<const uint8_t*>(&string[string.size()]));
         break;
+
     case TET_UTF16BE:
         binary.assign(reinterpret_cast<const uint8_t*>(string.data()), reinterpret_cast<const uint8_t*>(&string[string.size()]));
         swap_endian(&binary[0], binary.size());
         break;
+
     case TET_ANSI:
     case TET_ASCII:
         binary = std::move(string_to_binary(CP_ACP, string));
@@ -384,12 +389,15 @@ bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPL
         case TET_UTF8:
             binary.insert(0, "\xEF\xBB\xBF", 3);
             break;
+
         case TET_UTF16:
             binary.insert(0, "\xFF\xFE", 2);
             break;
+
         case TET_UTF16BE:
             binary.insert(0, "\xFE\xFF", 2);
             break;
+
         default:
             break;
         }

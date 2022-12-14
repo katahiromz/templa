@@ -29,6 +29,11 @@ TEMPLA_RET templa_main(int argc, wchar_t **argv);
 bool templa_load_file(const string_t& filename, binary_t& data);
 bool templa_save_file(const string_t& filename, const void *ptr, size_t data_size);
 
+inline bool templa_save_file(const string_t& filename, const binary_t& data)
+{
+    return templa_save_file(filename, &data[0], data.size());
+}
+
 enum TEMPLA_ENCODING_TYPE
 {
     TET_BINARY,
