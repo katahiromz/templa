@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.7\n"
+        "katahiromz/templa version 0.8\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -346,7 +346,6 @@ bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& s
         switch (encoding.newline)
         {
         case TNL_CRLF:
-        case TNL_UNKNOWN:
             str_replace(string, L"\r\n", L"\n");
             str_replace(string, L"\n", L"\r\n");
             break;
@@ -359,6 +358,9 @@ bool templa_save_file_ex(const string_t& filename, binary_t& binary, string_t& s
         case TNL_CR:
             str_replace(string, L"\r\n", L"\r");
             str_replace(string, L"\n", L"\r");
+            break;
+
+        case TNL_UNKNOWN:
             break;
         }
     }

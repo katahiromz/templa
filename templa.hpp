@@ -55,7 +55,7 @@ enum TEMPLA_NEWLINE
 struct TEMPLA_ENCODING
 {
     TEMPLA_ENCODING_TYPE type = TET_BINARY;
-    TEMPLA_NEWLINE newline = TNL_CRLF;
+    TEMPLA_NEWLINE newline = TNL_UNKNOWN;
     bool bom = false;
 };
 
