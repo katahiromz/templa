@@ -29,7 +29,7 @@ const char *templa_get_usage(void)
         "\n"
         "Options:\n"
         "  --replace FROM TO    Replace strings in filename and file contents.\n"
-        "  --ignore \"PATTERN\"   Exclude the wildcard patterns separated by semicolon.\n"
+        "  --ignore \"PATTERN\"   Ignore the wildcard patterns separated by semicolon.\n"
         "                       (default: \"q;*.bin;.git;.svg;.vs\")\n"
         "  --help               Show this message.\n"
         "  --version            Show version information.\n"
