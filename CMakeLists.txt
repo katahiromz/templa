@@ -51,7 +51,7 @@ set_target_properties(libtempla PROPERTIES PREFIX "")
 target_link_libraries(libtempla shlwapi)
 
 # templa.exe
-add_executable(templa main.cpp)
-target_link_libraries(templa libtempla)
+add_executable(templa main.cpp templa.cpp)
+target_link_libraries(templa shlwapi)
 
 ##############################################################################

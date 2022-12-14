@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.4\n"
+        "katahiromz/templa version 0.5\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -49,7 +49,7 @@ static void templa_help(void)
 
 static string_t dirname(const string_t& pathname)
 {
-    size_t ich = pathname.find(L'\\');
+    size_t ich = pathname.rfind(L'\\');
     if (ich == pathname.npos)
         return L"";
     return pathname.substr(0, ich + 1);
@@ -57,7 +57,7 @@ static string_t dirname(const string_t& pathname)
 
 static string_t basename(const string_t& pathname)
 {
-    size_t ich = pathname.find(L'\\');
+    size_t ich = pathname.rfind(L'\\');
     if (ich == pathname.npos)
         return pathname;
     return pathname.substr(ich + 1);
@@ -552,7 +552,6 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
 
     backslash_to_slash(source);
     backslash_to_slash(destination);
-    add_backslash(destination);
 
     if (!PathFileExistsW(source.c_str()))
     {
@@ -566,12 +565,31 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
         return TEMPLA_RET_WRITEERROR;
     }
 
-    if (source.find(destination) == 0)
     {
-        fprintf(stderr, "ERROR: Source '%ls' contains destination '%ls'\n",
-                source.c_str(), destination.c_str());
-        return TEMPLA_RET_LOGICALERROR;
+        WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
+        GetFullPathNameW(source.c_str(), _countof(szPath1), szPath1, NULL);
+        GetFullPathNameW(destination.c_str(), _countof(szPath2), szPath2, NULL);
+        if (PathIsDirectoryW(szPath1))
+            PathAddBackslash(szPath1);
+        if (PathIsDirectoryW(szPath2))
+            PathAddBackslash(szPath2);
+
+        if (lstrcmpiW(szPath1, szPath2) == 0)
+        {
+            fprintf(stderr, "ERROR: Destination is same as source\n");
+            return TEMPLA_RET_LOGICALERROR;
+        }
+
+        string_t src = szPath1, dest = szPath2;
+        if (dest.find(src) == 0)
+        {
+            fprintf(stderr, "ERROR: Source '%ls' contains destination '%ls' \n",
+                    src.c_str(), dest.c_str());
+            return TEMPLA_RET_LOGICALERROR;
+        }
     }
+
+    add_backslash(destination);
 
     auto dirname1 = dirname(source);
     auto basename1 = basename(source);
