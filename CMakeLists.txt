@@ -11,6 +11,9 @@ if (POLICY CMP0025)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
+# enable testing
+enable_testing()
+
 # project name and languages
 project(templa CXX)
 
@@ -53,5 +56,9 @@ target_link_libraries(libtempla shlwapi)
 # templa.exe
 add_executable(templa main.cpp templa.cpp)
 target_link_libraries(templa shlwapi)
+
+##############################################################################
+
+add_subdirectory(tests)
 
 ##############################################################################

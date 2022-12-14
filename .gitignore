@@ -34,3 +34,4 @@ a.*
 *.ninja
 .ninja*
 lib*.a
+Testing/
