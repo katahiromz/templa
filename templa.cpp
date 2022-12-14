@@ -558,16 +558,16 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 }
 
 TEMPLA_RET
-templa(string_t file1, string_t destination, const mapping_t& mapping,
+templa(string_t source, string_t destination, const mapping_t& mapping,
        const string_list_t& exclude)
 {
-    backslash_to_slash(file1);
+    backslash_to_slash(source);
     backslash_to_slash(destination);
     add_backslash(destination);
 
-    if (!PathFileExistsW(file1.c_str()))
+    if (!PathFileExistsW(source.c_str()))
     {
-        fprintf(stderr, "ERROR: File '%ls' not found\n", file1.c_str());
+        fprintf(stderr, "ERROR: File '%ls' not found\n", source.c_str());
         return TEMPLA_RET_INPUTERROR;
     }
 
@@ -577,8 +577,8 @@ templa(string_t file1, string_t destination, const mapping_t& mapping,
         return TEMPLA_RET_OUTPUTERROR;
     }
 
-    auto dirname1 = dirname(file1);
-    auto basename1 = basename(file1);
+    auto dirname1 = dirname(source);
+    auto basename1 = basename(source);
 
     for (auto& exclude_item : exclude)
     {
@@ -594,17 +594,17 @@ templa(string_t file1, string_t destination, const mapping_t& mapping,
     }
     auto file2 = dirname2 + basename2;
 
-    if (PathIsDirectoryW(file1.c_str()))
+    if (PathIsDirectoryW(source.c_str()))
     {
         if (!CreateDirectoryW(file2.c_str(), NULL))
         {
             fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
             return TEMPLA_RET_OUTPUTERROR;
         }
-        return templa_dir(file1, file2, mapping, exclude);
+        return templa_dir(source, file2, mapping, exclude);
     }
 
-    return templa_file(file1, file2, mapping, exclude);
+    return templa_file(source, file2, mapping, exclude);
 }
 
 TEMPLA_RET

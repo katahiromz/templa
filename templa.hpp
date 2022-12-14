@@ -16,7 +16,7 @@ enum TEMPLA_RET
 };
 
 TEMPLA_RET
-templa(string_t file1, string_t destination, const mapping_t& mapping,
+templa(string_t source, string_t destination, const mapping_t& mapping,
        const string_list_t& exclude);
 
 TEMPLA_RET templa_main(int argc, wchar_t **argv);
