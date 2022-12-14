@@ -47,33 +47,6 @@ static void templa_help(void)
     puts(templa_get_usage());
 }
 
-typedef std::string binary_t;
-
-enum ENCODING_TYPE
-{
-    ET_BINARY,
-    ET_UTF8,
-    ET_UTF16,
-    ET_UTF16BE,
-    ET_ANSI,
-    ET_ASCII,
-};
-
-enum ENCODING_NEWLINE
-{
-    EN_CRLF,
-    EN_LF,
-    EN_CR,
-    EN_UNKNOWN,
-};
-
-struct ENCODING
-{
-    ENCODING_TYPE type = ET_BINARY;
-    bool bom = false;
-    ENCODING_NEWLINE newline = EN_CRLF;
-};
-
 static string_t dirname(const string_t& pathname)
 {
     size_t ich = pathname.find(L'\\');
@@ -141,7 +114,7 @@ static bool wildcard_match(const string_t& str, const string_t& pattern)
     return std::regex_match(str, regex);
 }
 
-static bool load_file(const string_t& filename, binary_t& data)
+bool templa_load_file(const string_t& filename, binary_t& data)
 {
     if (FILE *fp = _wfopen(filename.c_str(), L"rb"))
     {
@@ -158,7 +131,7 @@ static bool load_file(const string_t& filename, binary_t& data)
     return false;
 }
 
-static bool save_file(const string_t& filename, const void *ptr, size_t data_size)
+bool templa_save_file(const string_t& filename, const void *ptr, size_t data_size)
 {
     if (FILE *fp = _wfopen(filename.c_str(), L"wb"))
     {
@@ -198,27 +171,27 @@ static void swap_endian(void *ptr, size_t size)
     }
 }
 
-static bool detect_newline(const string_t& string, ENCODING& encoding)
+static bool detect_newline(const string_t& string, TEMPLA_ENCODING& encoding)
 {
     if (string.find(L"\r\n") != string.npos)
     {
-        encoding.newline = EN_CRLF;
+        encoding.newline = TNL_CRLF;
         return true;
     }
 
     if (string.find(L"\n") != string.npos)
     {
-        encoding.newline = EN_LF;
+        encoding.newline = TNL_LF;
         return true;
     }
 
     if (string.find(L"\r") != string.npos)
     {
-        encoding.newline = EN_CR;
+        encoding.newline = TNL_CR;
         return true;
     }
 
-    encoding.newline = EN_UNKNOWN;
+    encoding.newline = TNL_UNKNOWN;
     return true;
 }
 
@@ -261,25 +234,25 @@ static void check_nulls(const binary_t& binary, bool& bUTF16LE, bool& bUTF16BE)
     }
 }
 
-static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encoding)
+static bool detect_encoding(string_t& string, binary_t& binary, TEMPLA_ENCODING& encoding)
 {
     if (binary.size() >= 3 && memcmp(binary.data(), "\xEF\xBB\xBF", 3) == 0)
     {
-        encoding.type = ET_UTF8;
+        encoding.type = TET_UTF8;
         encoding.bom = true;
         string = binary_to_string(CP_UTF8, binary.substr(3));
         return detect_newline(string, encoding);
     }
     else if (binary.size() >= 2 && memcmp(binary.data(), "\xFF\xFE", 2) == 0)
     {
-        encoding.type = ET_UTF16;
+        encoding.type = TET_UTF16;
         encoding.bom = true;
         string.assign(reinterpret_cast<const wchar_t*>(&binary[2]), reinterpret_cast<const wchar_t*>(&binary[binary.size()]));
         return detect_newline(string, encoding);
     }
     else if (binary.size() >= 2 && memcmp(binary.data(), "\xFE\xFF", 2) == 0)
     {
-        encoding.type = ET_UTF16BE;
+        encoding.type = TET_UTF16BE;
         encoding.bom = true;
         swap_endian(&binary[0], binary.size());
         string.assign(reinterpret_cast<const wchar_t*>(&binary[2]), reinterpret_cast<const wchar_t*>(&binary[binary.size()]));
@@ -287,7 +260,7 @@ static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encodi
     }
     else if (binary_is_ascii(binary))
     {
-        encoding.type = ET_ASCII;
+        encoding.type = TET_ASCII;
         encoding.bom = false;
         string = binary_to_string(CP_ACP, binary);
         return detect_newline(string, encoding);
@@ -299,19 +272,19 @@ static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encodi
 
         if (bUTF16LE && bUTF16BE)
         {
-            encoding.type = ET_BINARY;
+            encoding.type = TET_BINARY;
             string = binary_to_string(CP_ACP, binary);
             return detect_newline(string, encoding);
         }
         else if (bUTF16LE)
         {
-            encoding.type = ET_UTF16;
+            encoding.type = TET_UTF16;
             string.assign(reinterpret_cast<const wchar_t*>(binary.data()), reinterpret_cast<const wchar_t*>(binary.data() + binary.size()));
             return detect_newline(string, encoding);
         }
         else if (bUTF16BE)
         {
-            encoding.type = ET_UTF16BE;
+            encoding.type = TET_UTF16BE;
             swap_endian(&binary[0], binary.size());
             string.assign(reinterpret_cast<const wchar_t*>(binary.data()), reinterpret_cast<const wchar_t*>(binary.data() + binary.size()));
             return detect_newline(string, encoding);
@@ -323,13 +296,13 @@ static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encodi
 
     if (is_utf8 && !is_ansi)
     {
-        encoding.type = ET_UTF8;
+        encoding.type = TET_UTF8;
         string = binary_to_string(CP_UTF8, binary);
         return detect_newline(string, encoding);
     }
     else if (!is_utf8 && is_ansi)
     {
-        encoding.type = ET_ANSI;
+        encoding.type = TET_ANSI;
         string = binary_to_string(CP_ACP, binary);
         return detect_newline(string, encoding);
     }
@@ -337,7 +310,7 @@ static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encodi
     auto utf8 = binary_to_string(CP_UTF8, binary);
     if (string_to_binary(CP_UTF8, utf8) == binary)
     {
-        encoding.type = ET_UTF8;
+        encoding.type = TET_UTF8;
         string = std::move(utf8);
         return detect_newline(string, encoding);
     }
@@ -345,42 +318,40 @@ static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encodi
     auto ansi = binary_to_string(CP_ACP, binary);
     if (string_to_binary(CP_ACP, ansi) == binary)
     {
-        encoding.type = ET_ANSI;
+        encoding.type = TET_ANSI;
         string = std::move(ansi);
         return detect_newline(string, encoding);
     }
 
-    encoding.type = ET_BINARY;
+    encoding.type = TET_BINARY;
     string = binary_to_string(CP_ACP, binary);
     return detect_newline(string, encoding);
 }
 
-static bool
-load_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
+bool templa_load_file_ex(const string_t& filename, string_t& string, TEMPLA_ENCODING& encoding)
 {
     binary_t binary;
-    if (!load_file(filename, binary))
+    if (!templa_load_file(filename, binary))
         return false;
 
     detect_encoding(string, binary, encoding);
     return true;
 }
 
-static bool
-save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
+bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPLA_ENCODING& encoding)
 {
     switch (encoding.newline)
     {
-    case EN_CRLF:
-    case EN_UNKNOWN:
+    case TNL_CRLF:
+    case TNL_UNKNOWN:
         str_replace(string, L"\r\n", L"\n");
         str_replace(string, L"\n", L"\r\n");
         break;
-    case EN_LF:
+    case TNL_LF:
         str_replace(string, L"\r\n", L"\n");
         str_replace(string, L"\r", L"\n");
         break;
-    case EN_CR:
+    case TNL_CR:
         str_replace(string, L"\r\n", L"\r");
         str_replace(string, L"\n", L"\r");
         break;
@@ -389,19 +360,19 @@ save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& en
     binary_t binary;
     switch (encoding.type)
     {
-    case ET_BINARY:
-    case ET_UTF8:
+    case TET_BINARY:
+    case TET_UTF8:
         binary = std::move(string_to_binary(CP_UTF8, string));
         break;
-    case ET_UTF16:
+    case TET_UTF16:
         binary.assign(reinterpret_cast<const uint8_t*>(string.data()), reinterpret_cast<const uint8_t*>(&string[string.size()]));
         break;
-    case ET_UTF16BE:
+    case TET_UTF16BE:
         binary.assign(reinterpret_cast<const uint8_t*>(string.data()), reinterpret_cast<const uint8_t*>(&string[string.size()]));
         swap_endian(&binary[0], binary.size());
         break;
-    case ET_ANSI:
-    case ET_ASCII:
+    case TET_ANSI:
+    case TET_ASCII:
         binary = std::move(string_to_binary(CP_ACP, string));
         break;
     }
@@ -410,13 +381,13 @@ save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& en
     {
         switch (encoding.type)
         {
-        case ET_UTF8:
+        case TET_UTF8:
             binary.insert(0, "\xEF\xBB\xBF", 3);
             break;
-        case ET_UTF16:
+        case TET_UTF16:
             binary.insert(0, "\xFF\xFE", 2);
             break;
-        case ET_UTF16BE:
+        case TET_UTF16BE:
             binary.insert(0, "\xFE\xFF", 2);
             break;
         default:
@@ -424,7 +395,7 @@ save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& en
         }
     }
 
-    return save_file(filename, binary.data(), binary.size());
+    return templa_save_file(filename, binary.data(), binary.size());
 }
 
 static TEMPLA_RET
@@ -432,7 +403,7 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
             const string_list_t& exclude)
 {
     string_t string;
-    ENCODING encoding;
+    TEMPLA_ENCODING encoding;
 
     auto basename1 = basename(file1);
     for (auto& exclude_item : exclude)
@@ -441,13 +412,13 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
             return TEMPLA_RET_OK;
     }
 
-    if (!load_file_with_encoding(file1, string, encoding))
+    if (!templa_load_file_ex(file1, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot read file '%ls'\n", file1.c_str());
-        return TEMPLA_RET_INPUTERROR;
+        return TEMPLA_RET_READERROR;
     }
 
-    if (encoding.type != ET_BINARY)
+    if (encoding.type != TET_BINARY)
     {
         for (auto& pair : mapping)
         {
@@ -459,20 +430,20 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
         const char *type;
         switch (encoding.type)
         {
-        case ET_BINARY: type = "binary"; break;
-        case ET_UTF8: type = "UTF-8"; break;
-        case ET_UTF16: type = "UTF-16"; break;
-        case ET_UTF16BE: type = "UTF-16 BE"; break;
-        case ET_ANSI: type = "ANSI"; break;
-        case ET_ASCII: type = "ASCII"; break;
+        case TET_BINARY: type = "binary"; break;
+        case TET_UTF8: type = "UTF-8"; break;
+        case TET_UTF16: type = "UTF-16"; break;
+        case TET_UTF16BE: type = "UTF-16 BE"; break;
+        case TET_ANSI: type = "ANSI"; break;
+        case TET_ASCII: type = "ASCII"; break;
         }
         printf("%ls --> %ls [%s]\n", file1.c_str(), file2.c_str(), type);
     }
 
-    if (!save_file_with_encoding(file2, string, encoding))
+    if (!templa_save_file_ex(file2, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot write file '%ls'\n", file2.c_str());
-        return TEMPLA_RET_OUTPUTERROR;
+        return TEMPLA_RET_WRITEERROR;
     }
 
     return TEMPLA_RET_OK;
@@ -510,7 +481,7 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
     if (hFind == INVALID_HANDLE_VALUE)
     {
         fprintf(stderr, "ERROR: '%ls': Not a directory\n", dir1.c_str());
-        return TEMPLA_RET_INPUTERROR;
+        return TEMPLA_RET_READERROR;
     }
 
     TEMPLA_RET ret = TEMPLA_RET_OK;
@@ -535,10 +506,10 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 
         if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            if (!CreateDirectoryW(file2.c_str(), NULL))
+            if (!PathIsDirectoryW(file2.c_str()) && !CreateDirectoryW(file2.c_str(), NULL))
             {
                 fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
-                ret = TEMPLA_RET_OUTPUTERROR;
+                ret = TEMPLA_RET_WRITEERROR;
                 break;
             }
             ret = templa_dir(file1, file2, mapping, exclude);
@@ -568,13 +539,20 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
     if (!PathFileExistsW(source.c_str()))
     {
         fprintf(stderr, "ERROR: File '%ls' not found\n", source.c_str());
-        return TEMPLA_RET_INPUTERROR;
+        return TEMPLA_RET_READERROR;
     }
 
     if (!PathIsDirectoryW(destination.c_str()))
     {
         fprintf(stderr, "ERROR: '%ls' is not a directory\n", destination.c_str());
-        return TEMPLA_RET_OUTPUTERROR;
+        return TEMPLA_RET_WRITEERROR;
+    }
+
+    if (source.find(destination) == 0)
+    {
+        fprintf(stderr, "ERROR: Source '%ls' contains destination '%ls'\n",
+                source.c_str(), destination.c_str());
+        return TEMPLA_RET_LOGICALERROR;
     }
 
     auto dirname1 = dirname(source);
@@ -596,10 +574,10 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
 
     if (PathIsDirectoryW(source.c_str()))
     {
-        if (!CreateDirectoryW(file2.c_str(), NULL))
+        if (!PathIsDirectoryW(file2.c_str()) && !CreateDirectoryW(file2.c_str(), NULL))
         {
             fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
-            return TEMPLA_RET_OUTPUTERROR;
+            return TEMPLA_RET_WRITEERROR;
         }
         return templa_dir(source, file2, mapping, exclude);
     }
