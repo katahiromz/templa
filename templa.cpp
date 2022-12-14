@@ -400,10 +400,13 @@ bool templa_save_file_ex(const string_t& filename, string_t& string, const TEMPL
 
 static TEMPLA_RET
 templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
-            const string_list_t& exclude)
+            const string_list_t& exclude, templa_canceler_t canceler)
 {
     string_t string;
     TEMPLA_ENCODING encoding;
+
+    if (canceler && canceler())
+        return TEMPLA_RET_CANCELED;
 
     auto basename1 = basename(file1);
     for (auto& exclude_item : exclude)
@@ -425,6 +428,9 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
             str_replace(string, pair.first, pair.second);
         }
     }
+
+    if (canceler && canceler())
+        return TEMPLA_RET_CANCELED;
 
     {
         const char *type;
@@ -466,8 +472,11 @@ static void add_backslash(string_t& string)
 
 static TEMPLA_RET
 templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
-           const string_list_t& exclude)
+           const string_list_t& exclude, templa_canceler_t canceler)
 {
+    if (canceler && canceler())
+        return TEMPLA_RET_CANCELED;
+
     add_backslash(dir1);
     add_backslash(dir2);
 
@@ -487,6 +496,12 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
     TEMPLA_RET ret = TEMPLA_RET_OK;
     do
     {
+        if (canceler && canceler())
+        {
+            ret = TEMPLA_RET_CANCELED;
+            break;
+        }
+
         auto filename1 = find.cFileName;
         if (filename1[0] == L'.')
         {
@@ -512,13 +527,13 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
                 ret = TEMPLA_RET_WRITEERROR;
                 break;
             }
-            ret = templa_dir(file1, file2, mapping, exclude);
+            ret = templa_dir(file1, file2, mapping, exclude, canceler);
             if (ret != TEMPLA_RET_OK)
                 break;
         }
         else
         {
-            ret = templa_file(file1, file2, mapping, exclude);
+            ret = templa_file(file1, file2, mapping, exclude, canceler);
             if (ret != TEMPLA_RET_OK)
                 break;
         }
@@ -530,8 +545,11 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 
 TEMPLA_RET
 templa(string_t source, string_t destination, const mapping_t& mapping,
-       const string_list_t& exclude)
+       const string_list_t& exclude, templa_canceler_t canceler)
 {
+    if (canceler && canceler())
+        return TEMPLA_RET_CANCELED;
+
     backslash_to_slash(source);
     backslash_to_slash(destination);
     add_backslash(destination);
@@ -579,10 +597,10 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
             fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
             return TEMPLA_RET_WRITEERROR;
         }
-        return templa_dir(source, file2, mapping, exclude);
+        return templa_dir(source, file2, mapping, exclude, canceler);
     }
 
-    return templa_file(source, file2, mapping, exclude);
+    return templa_file(source, file2, mapping, exclude, canceler);
 }
 
 TEMPLA_RET

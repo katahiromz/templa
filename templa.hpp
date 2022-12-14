@@ -15,11 +15,14 @@ enum TEMPLA_RET
     TEMPLA_RET_READERROR,
     TEMPLA_RET_WRITEERROR,
     TEMPLA_RET_LOGICALERROR,
+    TEMPLA_RET_CANCELED,
 };
+
+typedef bool (*templa_canceler_t)(); // return true to cancel
 
 TEMPLA_RET
 templa(string_t source, string_t destination, const mapping_t& mapping,
-       const string_list_t& exclude);
+       const string_list_t& exclude, templa_canceler_t canceler = NULL);
 
 TEMPLA_RET templa_main(int argc, wchar_t **argv);
 
