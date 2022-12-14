@@ -4,7 +4,6 @@
 #include <shlwapi.h>
 #include <string>
 #include <vector>
-#include <regex>
 #include <cstdint>
 #include <unordered_map>
 #include "templa.hpp"
@@ -108,13 +107,48 @@ inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
     str_replace(data, string_t(from), string_t(to));
 }
 
-static bool wildcard_match(const string_t& str, const string_t& pattern)
+static bool wildcard_match(const string_t& str, const string_t& pat, size_t istr, size_t ipat)
 {
-    string_t pat = L"^" + pattern + L"$";
-    str_replace(pat, L"?", L".");
-    str_replace(pat, L"*", L".*");
-    std::wregex regex(pat);
-    return std::regex_match(str, regex);
+    do
+    {
+        if (ipat == pat.size())
+        {
+            return istr == str.size();
+        }
+
+        if (pat[ipat] == L'?')
+        {
+            if (istr == str.size())
+                return false;
+
+            return wildcard_match(str, pat, istr + 1, ipat + 1);
+        }
+
+        if (pat[ipat] == L'*')
+        {
+            if (wildcard_match(str, pat, istr, ipat + 1))
+                return true;
+
+            if (istr < str.size() && wildcard_match(str, pat, istr + 1, ipat))
+                return true;
+
+            return false;
+        }
+
+        WCHAR ch1 = pat[ipat], ch2 = str[istr];
+        ch1 = (WCHAR)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch1));
+        ch2 = (WCHAR)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch2));
+        if (ch1 != ch2)
+            return false;
+
+        ++ipat;
+        ++istr;
+    } while (1);
+}
+
+static bool wildcard_match(const string_t& str, const string_t& pat)
+{
+    return wildcard_match(str, pat, 0, 0);
 }
 
 bool templa_load_file(const string_t& filename, binary_t& data)
