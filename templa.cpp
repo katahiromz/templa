@@ -107,7 +107,7 @@ inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
     str_replace(data, string_t(from), string_t(to));
 }
 
-static bool wildcard_match(const string_t& str, const string_t& pat, size_t istr, size_t ipat)
+bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size_t ipat)
 {
     do
     {
@@ -121,15 +121,15 @@ static bool wildcard_match(const string_t& str, const string_t& pat, size_t istr
             if (istr == str.size())
                 return false;
 
-            return wildcard_match(str, pat, istr + 1, ipat + 1);
+            return templa_wildcard(str, pat, istr + 1, ipat + 1);
         }
 
         if (pat[ipat] == L'*')
         {
-            if (wildcard_match(str, pat, istr, ipat + 1))
+            if (templa_wildcard(str, pat, istr, ipat + 1))
                 return true;
 
-            if (istr < str.size() && wildcard_match(str, pat, istr + 1, ipat))
+            if (istr < str.size() && templa_wildcard(str, pat, istr + 1, ipat))
                 return true;
 
             return false;
@@ -146,9 +146,9 @@ static bool wildcard_match(const string_t& str, const string_t& pat, size_t istr
     } while (1);
 }
 
-static bool wildcard_match(const string_t& str, const string_t& pat)
+bool templa_wildcard(const string_t& str, const string_t& pat)
 {
-    return wildcard_match(str, pat, 0, 0);
+    return templa_wildcard(str, pat, 0, 0);
 }
 
 bool templa_load_file(const string_t& filename, binary_t& data)
@@ -467,7 +467,7 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
     auto basename1 = basename(file1);
     for (auto& ignore_item : ignore)
     {
-        if (wildcard_match(basename1, ignore_item))
+        if (templa_wildcard(basename1, ignore_item))
         {
             printf("%ls [ignored]\n", file1.c_str());
             return TEMPLA_RET_OK;
@@ -656,7 +656,7 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
 
     for (auto& ignore_item : ignore)
     {
-        if (wildcard_match(basename1, ignore_item))
+        if (templa_wildcard(basename1, ignore_item))
         {
             printf("%ls [ignored]\n", source.c_str());
             return TEMPLA_RET_OK;
