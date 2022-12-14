@@ -66,4 +66,4 @@ struct TEMPLA_FILE
     void detect_newline();
 };
 
-bool templa_wildcard(const string_t& str, const string_t& pat);
+bool templa_wildcard(const string_t& str, const string_t& pat, bool ignore_case = true);

@@ -11,7 +11,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.5\n"
+        "katahiromz/templa version 0.8.6\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -107,7 +107,7 @@ inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
     str_replace(data, string_t(from), string_t(to));
 }
 
-bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size_t ipat)
+bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size_t ipat, bool ignore_case)
 {
     for (;;)
     {
@@ -126,7 +126,7 @@ bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size
 
         if (pat[ipat] == L'*')
         {
-            if (templa_wildcard(str, pat, istr, ipat + 1))
+            if (templa_wildcard(str, pat, istr, ipat + 1, ignore_case))
                 return true;
 
             if (istr == str.size())
@@ -140,8 +140,11 @@ bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size
             return false;
 
         wchar_t ch1 = pat[ipat], ch2 = str[istr];
-        ch1 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch1));
-        ch2 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch2));
+        if (ignore_case)
+        {
+            ch1 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch1));
+            ch2 = (wchar_t)(ULONG_PTR)CharUpperW(MAKEINTRESOURCEW(ch2));
+        }
         if (ch1 != ch2)
             return false;
 
@@ -150,9 +153,9 @@ bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size
     }
 }
 
-bool templa_wildcard(const string_t& str, const string_t& pat)
+bool templa_wildcard(const string_t& str, const string_t& pat, bool ignore_case)
 {
-    return templa_wildcard(str, pat, 0, 0);
+    return templa_wildcard(str, pat, 0, 0, ignore_case);
 }
 
 bool templa_load_file(const string_t& filename, binary_t& data)
