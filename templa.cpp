@@ -14,7 +14,7 @@ const char *templa_get_version(void)
     return
         "katahiromz/templa version 0.4\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
-        "License: MIT\n";
+        "License: MIT";
 }
 
 const char *templa_get_usage(void)
@@ -34,7 +34,7 @@ const char *templa_get_usage(void)
         "  --help               Show this message.\n"
         "  --version            Show version information.\n"
         "\n"
-        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n";
+        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>";
 }
 
 static void templa_version(void)
