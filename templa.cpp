@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.2\n"
+        "katahiromz/templa version 0.8.3\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -252,7 +252,8 @@ void TEMPLA_FILE::detect_encoding()
     {
         m_encoding = TE_UTF16;
         m_bom = true;
-        m_string.assign(reinterpret_cast<const wchar_t*>(&m_binary[2]), reinterpret_cast<const wchar_t*>(&m_binary[m_binary.size()]));
+        m_string.assign(reinterpret_cast<const wchar_t*>(&m_binary[2]),
+                        reinterpret_cast<const wchar_t*>(&m_binary[m_binary.size()]));
         return;
     }
     else if (m_binary.size() >= 2 && memcmp(m_binary.data(), "\xFE\xFF", 2) == 0)
@@ -260,7 +261,8 @@ void TEMPLA_FILE::detect_encoding()
         m_encoding = TE_UTF16BE;
         m_bom = true;
         swap_endian(&m_binary[0], m_binary.size());
-        m_string.assign(reinterpret_cast<const wchar_t*>(&m_binary[2]), reinterpret_cast<const wchar_t*>(&m_binary[m_binary.size()]));
+        m_string.assign(reinterpret_cast<const wchar_t*>(&m_binary[2]),
+                        reinterpret_cast<const wchar_t*>(&m_binary[m_binary.size()]));
         return;
     }
     else if (binary_is_ascii(m_binary))
@@ -281,18 +283,23 @@ void TEMPLA_FILE::detect_encoding()
             m_string = binary_to_string(CP_ACP, m_binary);
             return;
         }
-        else if (bUTF16LE)
+        else if ((m_binary.size() & 1) == 0)
         {
-            m_encoding = TE_UTF16;
-            m_string.assign(reinterpret_cast<const wchar_t*>(m_binary.data()), reinterpret_cast<const wchar_t*>(m_binary.data() + m_binary.size()));
-            return;
-        }
-        else if (bUTF16BE)
-        {
-            m_encoding = TE_UTF16BE;
-            swap_endian(&m_binary[0], m_binary.size());
-            m_string.assign(reinterpret_cast<const wchar_t*>(m_binary.data()), reinterpret_cast<const wchar_t*>(m_binary.data() + m_binary.size()));
-            return;
+            auto begin = m_binary.data();
+            auto end = m_binary.data() + m_binary.size();
+            if (bUTF16LE)
+            {
+                m_encoding = TE_UTF16;
+                m_string.assign(reinterpret_cast<const wchar_t*>(begin), reinterpret_cast<const wchar_t*>(end));
+                return;
+            }
+            else if (bUTF16BE)
+            {
+                m_encoding = TE_UTF16BE;
+                swap_endian(&m_binary[0], m_binary.size());
+                m_string.assign(reinterpret_cast<const wchar_t*>(begin), reinterpret_cast<const wchar_t*>(end));
+                return;
+            }
         }
     }
 
