@@ -7,6 +7,7 @@
 #include <regex>
 #include <cstdint>
 #include <unordered_map>
+#include "templa.hpp"
 
 void templa_version(void)
 {
@@ -35,37 +36,6 @@ void templa_help(void)
         "\n"
         "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n");
 }
-
-typedef std::wstring string_t;
-typedef std::string binary_t;
-typedef std::unordered_map<string_t, string_t> mapping_t;
-
-enum ENCODING_TYPE
-{
-    ET_BINARY,
-    ET_UTF8,
-    ET_UTF16,
-    ET_UTF16BE,
-    ET_ANSI,
-    ET_ASCII
-};
-
-enum ENCODING_NEWLINE
-{
-    EN_CRLF,
-    EN_LF,
-    EN_CR,
-    EN_UNKNOWN,
-};
-
-struct ENCODING
-{
-    ENCODING_TYPE type = ET_BINARY;
-    bool bom = false;
-    ENCODING_NEWLINE newline = EN_CRLF;
-};
-
-typedef std::vector<string_t> patterns_t;
 
 string_t dirname(const string_t& pathname)
 {
@@ -416,7 +386,7 @@ bool save_file_with_encoding(const string_t& filename, string_t& string, ENCODIN
     return save_file(filename, binary.data(), binary.size());
 }
 
-int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, const patterns_t& exclude)
+int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, const string_vector_t& exclude)
 {
     string_t string;
     ENCODING encoding;
@@ -480,7 +450,7 @@ void add_backslash(string_t& string)
         string += L'\\';
 }
 
-int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const patterns_t& exclude)
+int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const string_vector_t& exclude)
 {
     add_backslash(dir1);
     add_backslash(dir2);
@@ -543,7 +513,7 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const pat
     return ret;
 }
 
-int templa(string_t file1, string_t destination, const mapping_t& mapping, const patterns_t& exclude)
+int templa(string_t file1, string_t destination, const mapping_t& mapping, const string_vector_t& exclude)
 {
     backslash_to_slash(file1);
     backslash_to_slash(destination);
@@ -591,8 +561,7 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
     return templa_file(file1, file2, mapping, exclude);
 }
 
-extern "C"
-int __cdecl wmain(int argc, wchar_t **argv)
+int templa_main(int argc, wchar_t **argv)
 {
     if (argc <= 1)
     {
@@ -602,7 +571,7 @@ int __cdecl wmain(int argc, wchar_t **argv)
 
     mapping_t mapping;
     std::vector<string_t> files;
-    patterns_t exclude;
+    string_vector_t exclude;
 
     str_split(exclude, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
 
@@ -679,14 +648,3 @@ int __cdecl wmain(int argc, wchar_t **argv)
 
     return 0;
 }
-
-#if defined(__MINGW32__) || defined(__clang__)
-int main(void)
-{
-    INT argc;
-    LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    INT ret = wmain(argc, argv);
-    LocalFree(argv);
-    return ret;
-}
-#endif

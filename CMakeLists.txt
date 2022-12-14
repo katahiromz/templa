@@ -45,8 +45,13 @@ endif()
 
 ##############################################################################
 
+# libtempla.a
+add_library(libtempla STATIC templa.cpp)
+set_target_properties(libtempla PROPERTIES PREFIX "")
+target_link_libraries(libtempla shlwapi)
+
 # templa.exe
-add_executable(templa templa.cpp)
-target_link_libraries(templa shlwapi)
+add_executable(templa main.cpp)
+target_link_libraries(templa libtempla)
 
 ##############################################################################
