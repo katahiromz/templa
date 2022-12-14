@@ -9,17 +9,17 @@
 #include <unordered_map>
 #include "templa.hpp"
 
-void templa_version(void)
+const char *templa_get_version(void)
 {
-    printf(
-        "katahiromz/templa version 0.2\n"
+    return
+        "katahiromz/templa version 0.3\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
-        "License: MIT\n");
+        "License: MIT\n";
 }
 
-void templa_help(void)
+const char *templa_get_usage(void)
 {
-    printf(
+    return
         "templa -- Copy files with replacing filenames and contents\n"
         "\n"
         "Usage: templa [OPTIONS] source1 ... destination\n"
@@ -34,10 +34,20 @@ void templa_help(void)
         "  --help               Show this message.\n"
         "  --version            Show version information.\n"
         "\n"
-        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n");
+        "Contact: Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>\n";
 }
 
-string_t dirname(const string_t& pathname)
+static void templa_version(void)
+{
+    puts(templa_get_version());
+}
+
+static void templa_help(void)
+{
+    puts(templa_get_usage());
+}
+
+static string_t dirname(const string_t& pathname)
 {
     size_t ich = pathname.find(L'\\');
     if (ich == pathname.npos)
@@ -45,7 +55,7 @@ string_t dirname(const string_t& pathname)
     return pathname.substr(0, ich + 1);
 }
 
-string_t basename(const string_t& pathname)
+static string_t basename(const string_t& pathname)
 {
     size_t ich = pathname.find(L'\\');
     if (ich == pathname.npos)
@@ -53,7 +63,7 @@ string_t basename(const string_t& pathname)
     return pathname.substr(ich + 1);
 }
 
-string_t binary_to_string(UINT codepage, const binary_t& bin)
+static string_t binary_to_string(UINT codepage, const binary_t& bin)
 {
     string_t ret;
     auto cch = MultiByteToWideChar(codepage, 0, bin.data(), INT(bin.size()), NULL, 0);
@@ -65,7 +75,7 @@ string_t binary_to_string(UINT codepage, const binary_t& bin)
     return ret;
 }
 
-binary_t string_to_binary(UINT codepage, const string_t& str)
+static binary_t string_to_binary(UINT codepage, const string_t& str)
 {
     binary_t ret;
     auto cch = WideCharToMultiByte(codepage, 0, str.data(), INT(str.size()), NULL, 0, NULL, NULL);
@@ -77,7 +87,7 @@ binary_t string_to_binary(UINT codepage, const string_t& str)
     return ret;
 }
 
-void str_replace(string_t& data, const string_t& from, const string_t& to)
+static void str_replace(string_t& data, const string_t& from, const string_t& to)
 {
     size_t i = 0;
     for (;;)
@@ -95,7 +105,7 @@ inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
     str_replace(data, string_t(from), string_t(to));
 }
 
-bool wildcard_match(const string_t& str, const string_t& pattern)
+static bool wildcard_match(const string_t& str, const string_t& pattern)
 {
     string_t pat = L"^" + pattern + L"$";
     str_replace(pat, L"?", L".");
@@ -104,7 +114,7 @@ bool wildcard_match(const string_t& str, const string_t& pattern)
     return std::regex_match(str, regex);
 }
 
-bool load_file(const string_t& filename, binary_t& data)
+static bool load_file(const string_t& filename, binary_t& data)
 {
     if (FILE *fp = _wfopen(filename.c_str(), L"rb"))
     {
@@ -121,7 +131,7 @@ bool load_file(const string_t& filename, binary_t& data)
     return false;
 }
 
-bool save_file(const string_t& filename, const void *ptr, size_t data_size)
+static bool save_file(const string_t& filename, const void *ptr, size_t data_size)
 {
     if (FILE *fp = _wfopen(filename.c_str(), L"wb"))
     {
@@ -149,7 +159,7 @@ str_split(T_STR_CONTAINER& container,
     container.push_back(str.substr(i));
 }
 
-void swap_endian(void *ptr, size_t size)
+static void swap_endian(void *ptr, size_t size)
 {
     auto pw = reinterpret_cast<uint16_t*>(ptr);
     size /= sizeof(uint16_t);
@@ -161,7 +171,7 @@ void swap_endian(void *ptr, size_t size)
     }
 }
 
-bool detect_newline(const string_t& string, ENCODING& encoding)
+static bool detect_newline(const string_t& string, ENCODING& encoding)
 {
     if (string.find(L"\r\n") != string.npos)
     {
@@ -185,17 +195,19 @@ bool detect_newline(const string_t& string, ENCODING& encoding)
     return true;
 }
 
-bool binary_is_ascii(const binary_t& binary)
+static bool binary_is_ascii(const binary_t& binary)
 {
     for (auto& byte : binary)
     {
+        if (byte == 0)
+            return false;
         if (byte & 0x80)
             return false;
     }
     return true;
 }
 
-void check_nulls(const binary_t& binary, bool& bUTF16LE, bool& bUTF16BE)
+static void check_nulls(const binary_t& binary, bool& bUTF16LE, bool& bUTF16BE)
 {
     size_t index = 0;
     for (auto ch : binary)
@@ -222,7 +234,7 @@ void check_nulls(const binary_t& binary, bool& bUTF16LE, bool& bUTF16BE)
     }
 }
 
-bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encoding)
+static bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encoding)
 {
     if (binary.size() >= 3 && memcmp(binary.data(), "\xEF\xBB\xBF", 3) == 0)
     {
@@ -316,7 +328,8 @@ bool detect_encoding(string_t& string, binary_t& binary, ENCODING& encoding)
     return detect_newline(string, encoding);
 }
 
-bool load_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
+static bool
+load_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
 {
     binary_t binary;
     if (!load_file(filename, binary))
@@ -326,7 +339,8 @@ bool load_file_with_encoding(const string_t& filename, string_t& string, ENCODIN
     return true;
 }
 
-bool save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
+static bool
+save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& encoding)
 {
     switch (encoding.newline)
     {
@@ -386,7 +400,9 @@ bool save_file_with_encoding(const string_t& filename, string_t& string, ENCODIN
     return save_file(filename, binary.data(), binary.size());
 }
 
-int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, const string_vector_t& exclude)
+static TEMPLA_RET
+templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
+            const string_vector_t& exclude)
 {
     string_t string;
     ENCODING encoding;
@@ -395,13 +411,13 @@ int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, cons
     for (auto& exclude_item : exclude)
     {
         if (wildcard_match(basename1, exclude_item))
-            return 0;
+            return TEMPLA_RET_OK;
     }
 
     if (!load_file_with_encoding(file1, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot read file '%ls'\n", file1.c_str());
-        return 1;
+        return TEMPLA_RET_INPUTERROR;
     }
 
     if (encoding.type != ET_BINARY)
@@ -429,13 +445,13 @@ int templa_file(string_t& file1, string_t& file2, const mapping_t& mapping, cons
     if (!save_file_with_encoding(file2, string, encoding))
     {
         fprintf(stderr, "ERROR: Cannot write file '%ls'\n", file2.c_str());
-        return 1;
+        return TEMPLA_RET_OUTPUTERROR;
     }
 
-    return 0;
+    return TEMPLA_RET_OK;
 }
 
-void backslash_to_slash(string_t& string)
+static void backslash_to_slash(string_t& string)
 {
     for (auto& ch : string)
     {
@@ -444,13 +460,15 @@ void backslash_to_slash(string_t& string)
     }
 }
 
-void add_backslash(string_t& string)
+static void add_backslash(string_t& string)
 {
     if (string.size() && string[string.size() - 1] != L'\\')
         string += L'\\';
 }
 
-int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const string_vector_t& exclude)
+static TEMPLA_RET
+templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
+           const string_vector_t& exclude)
 {
     add_backslash(dir1);
     add_backslash(dir2);
@@ -463,9 +481,12 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const str
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(spec.c_str(), &find);
     if (hFind == INVALID_HANDLE_VALUE)
-        return 0;
+    {
+        fprintf(stderr, "ERROR: '%ls': Not a directory\n", dir1.c_str());
+        return TEMPLA_RET_INPUTERROR;
+    }
 
-    int ret = 0;
+    TEMPLA_RET ret = TEMPLA_RET_OK;
     do
     {
         auto filename1 = find.cFileName;
@@ -490,22 +511,18 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const str
             if (!CreateDirectoryW(file2.c_str(), NULL))
             {
                 fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
-                ret = 1;
+                ret = TEMPLA_RET_OUTPUTERROR;
                 break;
             }
-            if (templa_dir(file1, file2, mapping, exclude) != 0)
-            {
-                ret = 1;
+            ret = templa_dir(file1, file2, mapping, exclude);
+            if (ret != TEMPLA_RET_OK)
                 break;
-            }
         }
         else
         {
-            if (templa_file(file1, file2, mapping, exclude) != 0)
-            {
-                ret = 1;
+            ret = templa_file(file1, file2, mapping, exclude);
+            if (ret != TEMPLA_RET_OK)
                 break;
-            }
         }
     } while (FindNextFileW(hFind, &find));
 
@@ -513,7 +530,9 @@ int templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping, const str
     return ret;
 }
 
-int templa(string_t file1, string_t destination, const mapping_t& mapping, const string_vector_t& exclude)
+TEMPLA_RET
+templa(string_t file1, string_t destination, const mapping_t& mapping,
+       const string_vector_t& exclude)
 {
     backslash_to_slash(file1);
     backslash_to_slash(destination);
@@ -522,13 +541,13 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
     if (!PathFileExistsW(file1.c_str()))
     {
         fprintf(stderr, "ERROR: File '%ls' not found\n", file1.c_str());
-        return 1;
+        return TEMPLA_RET_INPUTERROR;
     }
 
-    if (!PathIsDirectoryW(file1.c_str()))
+    if (!PathIsDirectoryW(destination.c_str()))
     {
         fprintf(stderr, "ERROR: '%ls' is not a directory\n", destination.c_str());
-        return 1;
+        return TEMPLA_RET_OUTPUTERROR;
     }
 
     auto dirname1 = dirname(file1);
@@ -537,7 +556,7 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
     for (auto& exclude_item : exclude)
     {
         if (wildcard_match(basename1, exclude_item))
-            return 0;
+            return TEMPLA_RET_OK;
     }
 
     auto dirname2 = destination;
@@ -553,7 +572,7 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
         if (!CreateDirectoryW(file2.c_str(), NULL))
         {
             fprintf(stderr, "ERROR: Cannot create folder '%ls'\n", file2.c_str());
-            return 1;
+            return TEMPLA_RET_OUTPUTERROR;
         }
         return templa_dir(file1, file2, mapping, exclude);
     }
@@ -561,12 +580,13 @@ int templa(string_t file1, string_t destination, const mapping_t& mapping, const
     return templa_file(file1, file2, mapping, exclude);
 }
 
-int templa_main(int argc, wchar_t **argv)
+TEMPLA_RET
+templa_main(int argc, wchar_t **argv)
 {
     if (argc <= 1)
     {
         templa_help();
-        return 1;
+        return TEMPLA_RET_SYNTAXERROR;
     }
 
     mapping_t mapping;
@@ -582,13 +602,13 @@ int templa_main(int argc, wchar_t **argv)
         if (arg == L"--help")
         {
             templa_help();
-            return 1;
+            return TEMPLA_RET_OK;
         }
 
         if (arg == L"--version")
         {
             templa_version();
-            return 1;
+            return TEMPLA_RET_OK;
         }
 
         if (arg == L"--replace")
@@ -603,7 +623,7 @@ int templa_main(int argc, wchar_t **argv)
             else
             {
                 fprintf(stderr, "ERROR: Option '--replace' requires two arguments\n");
-                return 1;
+                return TEMPLA_RET_SYNTAXERROR;
             }
         }
 
@@ -618,14 +638,14 @@ int templa_main(int argc, wchar_t **argv)
             else
             {
                 fprintf(stderr, "ERROR: Option '--exclude' requires one argument\n");
-                return 1;
+                return TEMPLA_RET_SYNTAXERROR;
             }
         }
 
         if (arg[0] == L'-')
         {
             fprintf(stderr, "ERROR: '%ls' is invalid option\n", arg.c_str());
-            return 1;
+            return TEMPLA_RET_SYNTAXERROR;
         }
 
         files.push_back(arg);
@@ -634,17 +654,17 @@ int templa_main(int argc, wchar_t **argv)
     if (files.size() <= 1)
     {
         fprintf(stderr, "ERROR: Specify two or more files\n");
-        return 1;
+        return TEMPLA_RET_SYNTAXERROR;
     }
 
     size_t iLast = files.size() - 1;
     auto& destination = files[iLast];
     for (size_t i = 0; i < iLast; ++i)
     {
-        int ret = templa(files[i], destination, mapping, exclude);
-        if (ret != 0)
+        TEMPLA_RET ret = templa(files[i], destination, mapping, exclude);
+        if (ret != TEMPLA_RET_OK)
             return ret;
     }
 
-    return 0;
+    return TEMPLA_RET_OK;
 }

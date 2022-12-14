@@ -12,7 +12,7 @@ enum ENCODING_TYPE
     ET_UTF16,
     ET_UTF16BE,
     ET_ANSI,
-    ET_ASCII
+    ET_ASCII,
 };
 
 enum ENCODING_NEWLINE
@@ -30,5 +30,19 @@ struct ENCODING
     ENCODING_NEWLINE newline = EN_CRLF;
 };
 
-int templa(string_t file1, string_t destination, const mapping_t& mapping, const string_vector_t& exclude);
-int templa_main(int argc, wchar_t **argv);
+const char *templa_get_version(void);
+const char *templa_get_usage(void);
+
+enum TEMPLA_RET
+{
+    TEMPLA_RET_OK = 0,
+    TEMPLA_RET_SYNTAXERROR,
+    TEMPLA_RET_INPUTERROR,
+    TEMPLA_RET_OUTPUTERROR,
+};
+
+TEMPLA_RET
+templa(string_t file1, string_t destination, const mapping_t& mapping,
+       const string_vector_t& exclude);
+
+TEMPLA_RET templa_main(int argc, wchar_t **argv);
