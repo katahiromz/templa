@@ -583,7 +583,7 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
         string_t src = szPath1, dest = szPath2;
         if (dest.find(src) == 0)
         {
-            fprintf(stderr, "ERROR: Source '%ls' contains destination '%ls' \n",
+            fprintf(stderr, "ERROR: Source '%ls' contains destination '%ls'\n",
                     src.c_str(), dest.c_str());
             return TEMPLA_RET_LOGICALERROR;
         }
