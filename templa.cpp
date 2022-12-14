@@ -47,6 +47,8 @@ static void templa_help(void)
     puts(templa_get_usage());
 }
 
+typedef std::string binary_t;
+
 enum ENCODING_TYPE
 {
     ET_BINARY,
@@ -427,7 +429,7 @@ save_file_with_encoding(const string_t& filename, string_t& string, ENCODING& en
 
 static TEMPLA_RET
 templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
-            const string_vector_t& exclude)
+            const string_list_t& exclude)
 {
     string_t string;
     ENCODING encoding;
@@ -493,7 +495,7 @@ static void add_backslash(string_t& string)
 
 static TEMPLA_RET
 templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
-           const string_vector_t& exclude)
+           const string_list_t& exclude)
 {
     add_backslash(dir1);
     add_backslash(dir2);
@@ -557,7 +559,7 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 
 TEMPLA_RET
 templa(string_t file1, string_t destination, const mapping_t& mapping,
-       const string_vector_t& exclude)
+       const string_list_t& exclude)
 {
     backslash_to_slash(file1);
     backslash_to_slash(destination);
@@ -616,7 +618,7 @@ templa_main(int argc, wchar_t **argv)
 
     mapping_t mapping;
     std::vector<string_t> files;
-    string_vector_t exclude;
+    string_list_t exclude;
 
     str_split(exclude, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
 
