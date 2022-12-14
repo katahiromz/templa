@@ -12,7 +12,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.3\n"
+        "katahiromz/templa version 0.4\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT\n";
 }
@@ -46,6 +46,31 @@ static void templa_help(void)
 {
     puts(templa_get_usage());
 }
+
+enum ENCODING_TYPE
+{
+    ET_BINARY,
+    ET_UTF8,
+    ET_UTF16,
+    ET_UTF16BE,
+    ET_ANSI,
+    ET_ASCII,
+};
+
+enum ENCODING_NEWLINE
+{
+    EN_CRLF,
+    EN_LF,
+    EN_CR,
+    EN_UNKNOWN,
+};
+
+struct ENCODING
+{
+    ENCODING_TYPE type = ET_BINARY;
+    bool bom = false;
+    ENCODING_NEWLINE newline = EN_CRLF;
+};
 
 static string_t dirname(const string_t& pathname)
 {
