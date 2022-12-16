@@ -11,7 +11,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.6\n"
+        "katahiromz/templa version 0.8.7\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -84,27 +84,6 @@ static binary_t string_to_binary(UINT codepage, const string_t& str)
     ret.resize(cch);
     WideCharToMultiByte(codepage, 0, str.data(), INT(str.size()), &ret[0], INT(ret.size()), NULL, NULL);
     return ret;
-}
-
-static void str_replace(string_t& data, const string_t& from, const string_t& to)
-{
-    if (from.empty())
-        return;
-
-    size_t i = 0;
-    for (;;)
-    {
-        i = data.find(from, i);
-        if (i == string_t::npos)
-            break;
-        data.replace(i, from.size(), to);
-        i += to.size();
-    }
-}
-
-inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
-{
-    str_replace(data, string_t(from), string_t(to));
 }
 
 bool templa_wildcard(const string_t& str, const string_t& pat, size_t istr, size_t ipat, bool ignore_case)
@@ -184,23 +163,6 @@ bool templa_save_file(const string_t& filename, const void *ptr, size_t data_siz
         return ok;
     }
     return false;
-}
-
-template <typename T_STR_CONTAINER>
-void
-str_split(T_STR_CONTAINER& container,
-          const typename T_STR_CONTAINER::value_type& str,
-          const typename T_STR_CONTAINER::value_type& chars)
-{
-    container.clear();
-    size_t i = 0, k = str.find_first_of(chars);
-    while (k != T_STR_CONTAINER::value_type::npos)
-    {
-        container.push_back(str.substr(i, k - i));
-        i = k + 1;
-        k = str.find_first_of(chars, i);
-    }
-    container.push_back(str.substr(i));
 }
 
 static void swap_endian(void *ptr, size_t size)
@@ -520,21 +482,6 @@ templa_file(string_t& file1, string_t& file2, const mapping_t& mapping,
     }
 
     return TEMPLA_RET_OK;
-}
-
-static void backslash_to_slash(string_t& string)
-{
-    for (auto& ch : string)
-    {
-        if (ch == L'/')
-            ch = L'\\';
-    }
-}
-
-static void add_backslash(string_t& string)
-{
-    if (string.size() && string[string.size() - 1] != L'\\')
-        string += L'\\';
 }
 
 static TEMPLA_RET

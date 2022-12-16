@@ -22,7 +22,7 @@ typedef bool (*templa_canceler_t)(); // return true to cancel
 
 TEMPLA_RET
 templa(string_t source, string_t destination, const mapping_t& mapping,
-       const string_list_t& exclude, templa_canceler_t canceler = NULL);
+       const string_list_t& ignore, templa_canceler_t canceler = NULL);
 
 TEMPLA_RET templa_main(int argc, wchar_t **argv);
 
@@ -67,3 +67,56 @@ struct TEMPLA_FILE
 };
 
 bool templa_wildcard(const string_t& str, const string_t& pat, bool ignore_case = true);
+
+inline void str_replace(string_t& data, const string_t& from, const string_t& to)
+{
+    if (from.empty())
+        return;
+
+    size_t i = 0;
+    for (;;)
+    {
+        i = data.find(from, i);
+        if (i == string_t::npos)
+            break;
+        data.replace(i, from.size(), to);
+        i += to.size();
+    }
+}
+
+inline void str_replace(string_t& data, const wchar_t *from, const wchar_t *to)
+{
+    str_replace(data, string_t(from), string_t(to));
+}
+
+template <typename T_STR_CONTAINER>
+inline void
+str_split(T_STR_CONTAINER& container,
+          const typename T_STR_CONTAINER::value_type& str,
+          const typename T_STR_CONTAINER::value_type& chars)
+{
+    container.clear();
+    size_t i = 0, k = str.find_first_of(chars);
+    while (k != T_STR_CONTAINER::value_type::npos)
+    {
+        container.push_back(str.substr(i, k - i));
+        i = k + 1;
+        k = str.find_first_of(chars, i);
+    }
+    container.push_back(str.substr(i));
+}
+
+inline void backslash_to_slash(string_t& string)
+{
+    for (auto& ch : string)
+    {
+        if (ch == L'/')
+            ch = L'\\';
+    }
+}
+
+inline void add_backslash(string_t& string)
+{
+    if (string.size() && string[string.size() - 1] != L'\\')
+        string += L'\\';
+}
