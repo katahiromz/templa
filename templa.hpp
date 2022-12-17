@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 typedef std::wstring string_t;
 typedef std::unordered_map<string_t, string_t> mapping_t;
 typedef std::vector<string_t> string_list_t;
@@ -119,4 +123,29 @@ inline void add_backslash(string_t& string)
 {
     if (string.size() && string[string.size() - 1] != L'\\')
         string += L'\\';
+}
+
+template <typename T_CHAR>
+inline void str_trim(std::basic_string<T_CHAR>& str, const T_CHAR *spaces)
+{
+    typedef std::basic_string<T_CHAR> string_type;
+    size_t i = str.find_first_not_of(spaces);
+    size_t j = str.find_last_not_of(spaces);
+    if ((i == string_type::npos) || (j == string_type::npos))
+    {
+        str.clear();
+    }
+    else
+    {
+        str = str.substr(i, j - i + 1);
+    }
+}
+
+template <typename T_CHAR, size_t siz>
+inline void str_trim(T_CHAR (&str)[siz], const T_CHAR *spaces)
+{
+    typedef std::basic_string<T_CHAR> string_type;
+    string_type s = str;
+    str_trim(s, spaces);
+    mstrcpy(str, s.c_str());
 }

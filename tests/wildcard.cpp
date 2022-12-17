@@ -1,7 +1,4 @@
 #include <windows.h>
-#include <string>
-#include <unordered_map>
-#include <vector>
 #include <cstdio>
 #include <cassert>
 #include "../templa.hpp"
