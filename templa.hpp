@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 typedef std::wstring string_t;
-typedef std::unordered_map<string_t, string_t> mapping_t;
+typedef std::map<string_t, string_t> mapping_t;
 typedef std::vector<string_t> string_list_t;
 typedef std::string binary_t;
 
