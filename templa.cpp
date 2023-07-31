@@ -29,7 +29,7 @@ const char *templa_get_usage(void)
         "Options:\n"
         "  --replace FROM TO    Replace strings in filename and file contents.\n"
         "  --ignore \"PATTERN\"   Ignore the wildcard patterns separated by semicolon.\n"
-        "                       (default: \"q;*.bin;.git;.svg;.vs\")\n"
+        "                       (default: \"q;*.bin;.git;.svn;.vs\")\n"
         "  --help               Show this message.\n"
         "  --version            Show version information.\n"
         "\n"
@@ -651,7 +651,7 @@ templa_main(int argc, wchar_t **argv)
     std::vector<string_t> files;
     string_list_t ignore;
 
-    str_split(ignore, string_t(L"q;*.bin;.git;.svg;.vs"), string_t(L";"));
+    str_split(ignore, string_t(L"q;*.bin;.git;.svn;.vs"), string_t(L";"));
 
     for (int iarg = 1; iarg < argc; ++iarg)
     {

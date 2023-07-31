@@ -8,7 +8,7 @@ Usage: templa [OPTIONS] source1 ... destination
 Options:
   --replace FROM TO    Replace strings in filename and file contents.
   --ignore "PATTERN"   Ignore the wildcard patterns separated by semicolon.
-                       (default: "q;*.bin;.git;.svg;.vs")
+                       (default: "q;*.bin;.git;.svn;.vs")
   --help               Show this message.
   --version            Show version information.
 
