@@ -11,7 +11,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.7\n"
+        "katahiromz/templa version 0.8.8\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
