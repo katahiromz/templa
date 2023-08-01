@@ -11,7 +11,7 @@
 const char *templa_get_version(void)
 {
     return
-        "katahiromz/templa version 0.8.8\n"
+        "katahiromz/templa version 0.8.9\n"
         "Copyright (C) 2022 Katayama Hirofumi MZ. All Rights Reserved.\n"
         "License: MIT";
 }
@@ -562,6 +562,12 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
 bool templa_validate_filename(string_t& filename)
 {
     bool ret = false;
+
+    str_trim_left(filename, L" \t\r\n\x3000");
+    str_trim_right(filename, L" .\t\r\n\x3000");
+
+    if (filename.empty())
+        filename = L"_";
 
     // Replace invalid characters
     for (auto& ch : filename)

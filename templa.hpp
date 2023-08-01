@@ -151,3 +151,33 @@ inline void str_trim(T_CHAR (&str)[siz], const T_CHAR *spaces)
 }
 
 bool templa_validate_filename(string_t& filename);
+
+template <typename T_CHAR>
+inline void str_trim_left(std::basic_string<T_CHAR>& str, const T_CHAR *spaces)
+{
+    typedef std::basic_string<T_CHAR> string_type;
+    size_t i = str.find_first_not_of(spaces);
+    if (i == string_type::npos)
+    {
+        str.clear();
+    }
+    else
+    {
+        str = str.substr(i);
+    }
+}
+
+template <typename T_CHAR>
+inline void str_trim_right(std::basic_string<T_CHAR>& str, const T_CHAR *spaces)
+{
+    typedef std::basic_string<T_CHAR> string_type;
+    size_t j = str.find_last_not_of(spaces);
+    if (j == string_type::npos)
+    {
+        str.clear();
+    }
+    else
+    {
+        str = str.substr(0, j + 1);
+    }
+}
