@@ -149,3 +149,5 @@ inline void str_trim(T_CHAR (&str)[siz], const T_CHAR *spaces)
     str_trim(s, spaces);
     mstrcpy(str, s.c_str());
 }
+
+bool templa_validate_filename(string_t& filename);

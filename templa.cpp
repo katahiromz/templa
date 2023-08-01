@@ -531,6 +531,8 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
         {
             str_replace(filename2, pair.first, pair.second);
         }
+        templa_validate_filename(filename2);
+
         auto file2 = dir2 + filename2;
 
         if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -554,6 +556,67 @@ templa_dir(string_t dir1, string_t dir2, const mapping_t& mapping,
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind);
+    return ret;
+}
+
+bool templa_validate_filename(string_t& filename)
+{
+    bool ret = false;
+
+    // Replace invalid characters
+    for (auto& ch : filename)
+    {
+        switch (ch)
+        {
+        case '\\': case '/': case ':': case '*': case '?':
+        case '"': case '<': case '>': case '|':
+            ch = '_';
+            ret = true;
+            break;
+        }
+    }
+
+    // Check invalida names
+    if (lstrcmpiW(filename.c_str(), L"CON") == 0 ||
+        lstrcmpiW(filename.c_str(), L"PRN") == 0 ||
+        lstrcmpiW(filename.c_str(), L"AUX") == 0 ||
+        lstrcmpiW(filename.c_str(), L"NUL") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM0") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM1") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM2") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM3") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM4") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM5") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM6") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM7") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM8") == 0 ||
+        lstrcmpiW(filename.c_str(), L"COM9") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT0") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT1") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT2") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT3") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT4") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT5") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT6") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT7") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT8") == 0 ||
+        lstrcmpiW(filename.c_str(), L"LPT9") == 0)
+    {
+        ret = true;
+        filename += L'_';
+    }
+
+    if (filename == L".")
+    {
+        ret = true;
+        filename = L"_";
+    }
+    else if (filename == L"..")
+    {
+        ret = true;
+        filename = L"__";
+    }
+
     return ret;
 }
 
@@ -618,11 +681,15 @@ templa(string_t source, string_t destination, const mapping_t& mapping,
     }
 
     auto dirname2 = destination;
+
     auto basename2 = basename1;
     for (auto& pair : mapping)
     {
         str_replace(basename2, pair.first, pair.second);
     }
+
+    templa_validate_filename(basename2);
+
     auto file2 = dirname2 + basename2;
 
     if (PathIsDirectoryW(source.c_str()))
